@@ -1,39 +1,56 @@
 import React from 'react'
 import { useCart } from '../context/CartContext'
+import { Link, useNavigate } from 'react-router-dom'
 
-export default function CartPage(){
+export default function CartPage() {
   const { state, dispatch, totalPrice } = useCart()
-
-  if (state.items.length === 0) {
-    return <div className="empty"><h3>Your cart is empty</h3><p>Add items from the product list.</p></div>
-  }
+  const navigate = useNavigate()
 
   const updateQty = (id, qty) => dispatch({ type: 'UPDATE_QTY', payload: { id, qty } })
-  const remove = (id) => dispatch({ type: 'REMOVE_ITEM', payload: { id } })
+  const removeItem = (id) => dispatch({ type: 'REMOVE_ITEM', payload: { id } })
+
+  if (state.items.length === 0)
+    return (
+      <div style={{ padding: '2rem' }}>
+        <p>Your cart is empty.</p>
+        <Link to="/">Back to Home</Link>
+      </div>
+    )
 
   return (
-    <div>
-      <h1 style={{ marginBottom:'1rem' }}>Your Cart</h1>
-      <div style={{ display:'grid', gap:12 }}>
-        {state.items.map(i => (
-          <div key={i.id} style={{ display:'flex', gap:12, alignItems:'center', background:'white', padding:12, borderRadius:8 }}>
-            <img src={i.product.image} alt="" style={{ width:90, height:65, objectFit:'cover', borderRadius:6 }} />
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:600 }}>{i.product.name}</div>
-              <div style={{ color:'#6b7280', fontSize:13 }}>${i.product.price.toFixed(2)}</div>
-            </div>
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <input type="number" min="1" value={i.qty} onChange={(e)=> updateQty(i.id, Math.max(1, Number(e.target.value)||1))} style={{ width:60, padding:6 }} />
-              <button onClick={()=> remove(i.id)} className="btn" style={{ background:'#ef4444' }}>Remove</button>
-            </div>
+    <div style={{ maxWidth: 800, margin: '2rem auto' }}>
+      <h1>Your Cart</h1>
+      {state.items.map((i) => (
+        <div
+          key={i.id}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}
+        >
+          <span>{i.product.name}</span>
+          <div>
+            <button onClick={() => updateQty(i.id, i.qty - 1)} disabled={i.qty <= 1}>
+              -
+            </button>
+            <span style={{ margin: '0 8px' }}>{i.qty}</span>
+            <button onClick={() => updateQty(i.id, i.qty + 1)}>+</button>
+            <button onClick={() => removeItem(i.id)} style={{ marginLeft: 8 }}>
+              Remove
+            </button>
           </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop:20, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <div style={{ fontSize:18, fontWeight:700 }}>Total: ${totalPrice.toFixed(2)}</div>
-        <button className="btn">Proceed to Checkout</button>
-      </div>
+          <span>${(i.qty * i.product.price).toFixed(2)}</span>
+        </div>
+      ))}
+      <div style={{ fontWeight: 700, marginTop: 16 }}>Total: ${totalPrice.toFixed(2)}</div>
+      <button
+        onClick={() => navigate('/checkout')}
+        style={{ marginTop: 16, padding: '0.5rem 1rem' }}
+      >
+        Proceed to Checkout
+      </button>
     </div>
   )
 }
